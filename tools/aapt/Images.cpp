@@ -1460,7 +1460,7 @@ status_t preProcessImageToCache(const Bundle* bundle, const String8& source, con
     png_structp read_ptr = NULL;
     png_infop read_info = NULL;
 
-    FILE*volatile fp;
+    FILE* fp;
 
     image_info imageInfo;
 

@@ -26,7 +26,6 @@ import android.app.admin.DevicePolicyManager;
 import android.app.admin.IDevicePolicyManager;
 import android.app.appsearch.AppSearchManagerFrameworkInitializer;
 import android.app.blob.BlobStoreManagerFrameworkInitializer;
-import android.app.compat.gms.GmsCompat;
 import android.app.contentsuggestions.ContentSuggestionsManager;
 import android.app.contentsuggestions.IContentSuggestionsManager;
 import android.app.job.JobSchedulerFrameworkInitializer;
@@ -203,6 +202,7 @@ import android.telecom.TelecomManager;
 import android.telephony.MmsManager;
 import android.telephony.TelephonyFrameworkInitializer;
 import android.telephony.TelephonyRegistryManager;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.util.Slog;
 import android.uwb.UwbManager;
@@ -234,7 +234,6 @@ import com.android.internal.os.IDropBoxManagerService;
 import com.android.internal.policy.PhoneLayoutInflater;
 import com.android.internal.util.Preconditions;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -254,10 +253,10 @@ public final class SystemServiceRegistry {
     // Service registry information.
     // This information is never changed once static initialization has completed.
     private static final Map<Class<?>, String> SYSTEM_SERVICE_NAMES =
-            new HashMap<Class<?>, String>();
+            new ArrayMap<Class<?>, String>();
     private static final Map<String, ServiceFetcher<?>> SYSTEM_SERVICE_FETCHERS =
-            new HashMap<String, ServiceFetcher<?>>();
-    private static final Map<String, String> SYSTEM_SERVICE_CLASS_NAMES = new HashMap<>();
+            new ArrayMap<String, ServiceFetcher<?>>();
+    private static final Map<String, String> SYSTEM_SERVICE_CLASS_NAMES = new ArrayMap<>();
 
     private static int sServiceCacheSize;
 
@@ -1405,10 +1404,6 @@ public final class SystemServiceRegistry {
                     @Override
                     public AppIntegrityManager createService(ContextImpl ctx)
                             throws ServiceNotFoundException {
-                        if (GmsCompat.isEnabled()) {
-                            return new AppIntegrityManager(null);
-                        }
-
                         IBinder b = ServiceManager.getServiceOrThrow(Context.APP_INTEGRITY_SERVICE);
                         return new AppIntegrityManager(IAppIntegrityManager.Stub.asInterface(b));
                     }});

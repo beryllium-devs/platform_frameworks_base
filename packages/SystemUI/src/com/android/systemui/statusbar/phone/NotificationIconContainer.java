@@ -135,10 +135,8 @@ public class NotificationIconContainer extends AlphaOptimizedFrameLayout {
         }
     }.setDuration(CONTENT_FADE_DURATION);
 
-    private final int MAX_VISIBLE_ICONS_ON_LOCK =
-            getResources().getInteger(R.integer.config_maxVisibleNotificationIconsWhenLock);
-    public final int MAX_STATIC_ICONS =
-            getResources().getInteger(R.integer.config_maxVisibleNotificationIcons);
+    private static final int MAX_VISIBLE_ICONS_ON_LOCK = 5;
+    public static final int MAX_STATIC_ICONS = 4;
     private static final int MAX_DOTS = 1;
 
     private boolean mIsStaticLayout = true;

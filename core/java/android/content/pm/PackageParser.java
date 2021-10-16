@@ -92,7 +92,6 @@ import android.view.Gravity;
 
 import com.android.internal.R;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.os.ClassLoaderFactory;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.XmlUtils;
@@ -262,17 +261,11 @@ public class PackageParser {
         @UnsupportedAppUsage
         public final int sdkVersion;
         public final int fileVersion;
-        public final String targetPackage;
 
-        public NewPermissionInfo(String name, int sdkVersion, int fileVersion, String targetPackage) {
+        public NewPermissionInfo(String name, int sdkVersion, int fileVersion) {
             this.name = name;
             this.sdkVersion = sdkVersion;
             this.fileVersion = fileVersion;
-            this.targetPackage = targetPackage;
-        }
-
-        public NewPermissionInfo(String name, int sdkVersion, int fileVersion) {
-            this(name, sdkVersion, fileVersion, null);
         }
     }
 
@@ -288,10 +281,6 @@ public class PackageParser {
     @UnsupportedAppUsage
     public static final PackageParser.NewPermissionInfo NEW_PERMISSIONS[] =
         new PackageParser.NewPermissionInfo[] {
-            new PackageParser.NewPermissionInfo(android.Manifest.permission.REQUEST_INSTALL_PACKAGES,
-                    android.os.Build.VERSION_CODES.CUR_DEVELOPMENT + 1, 0, GmsInfo.PACKAGE_PLAY_STORE),
-            new PackageParser.NewPermissionInfo(android.Manifest.permission.OTHER_SENSORS,
-                    android.os.Build.VERSION_CODES.CUR_DEVELOPMENT + 1, 0),
             new PackageParser.NewPermissionInfo(android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     android.os.Build.VERSION_CODES.DONUT, 0),
             new PackageParser.NewPermissionInfo(android.Manifest.permission.READ_PHONE_STATE,
@@ -4674,8 +4663,10 @@ public class PackageParser {
      * ratio set.
      */
     private void setMaxAspectRatio(Package owner) {
-        // Start at an unlimited aspect ratio unless we get a more restrictive one
-        float maxAspectRatio = 0;
+        // Default to (1.86) 16.7:9 aspect ratio for pre-O apps and unset for O and greater.
+        // NOTE: 16.7:9 was the max aspect ratio Android devices can support pre-O per the CDD.
+        float maxAspectRatio = owner.applicationInfo.targetSdkVersion < O
+                ? DEFAULT_PRE_O_MAX_ASPECT_RATIO : 0;
 
         if (owner.applicationInfo.maxAspectRatio != 0) {
             // Use the application max aspect ration as default if set.

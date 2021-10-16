@@ -82,6 +82,7 @@ import com.android.server.notification.NotificationDelegate;
 import com.android.server.policy.GlobalActionsProvider;
 import com.android.server.power.ShutdownCheckPoints;
 import com.android.server.power.ShutdownThread;
+import com.android.server.UiThread;
 import com.android.server.wm.ActivityTaskManagerInternal;
 
 import java.io.FileDescriptor;
@@ -1629,17 +1630,6 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
         if (mBar != null) {
             try {
                 mBar.suppressAmbientDisplay(suppress);
-            } catch (RemoteException ex) {
-            }
-        }
-    }
-
-    @Override
-    public void startAssist(Bundle args) {
-        enforceStatusBarService();
-        if (mBar != null) {
-            try {
-                mBar.startAssist(args);
             } catch (RemoteException ex) {
             }
         }

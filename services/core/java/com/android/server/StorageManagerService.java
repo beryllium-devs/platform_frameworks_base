@@ -157,6 +157,7 @@ import com.android.server.storage.StorageSessionController;
 import com.android.server.storage.StorageSessionController.ExternalStorageServiceException;
 import com.android.server.wm.ActivityTaskManagerInternal;
 import com.android.server.wm.ActivityTaskManagerInternal.ScreenObserver;
+import com.android.internal.widget.ILockSettings;
 
 import libcore.io.IoUtils;
 import libcore.util.EmptyArray;
@@ -1581,8 +1582,6 @@ class StorageManagerService extends IStorageManager.Stub
             // public API requirement of being in a stable location.
             if (vol.disk.isAdoptable()) {
                 vol.mountFlags |= VolumeInfo.MOUNT_FLAG_VISIBLE;
-            } else if (vol.disk.isSd()) {
-                vol.mountFlags |= VolumeInfo.MOUNT_FLAG_VISIBLE;
             }
 
             vol.mountUserId = mCurrentUserId;
@@ -2371,10 +2370,8 @@ class StorageManagerService extends IStorageManager.Stub
                     final long destroy = extras.getLong("destroy");
 
                     final DropBoxManager dropBox = mContext.getSystemService(DropBoxManager.class);
-                    if (dropBox != null) {
-                        dropBox.addText(TAG_STORAGE_BENCHMARK, scrubPath(path)
-                                + " " + ident + " " + create + " " + run + " " + destroy);
-                    }
+                    dropBox.addText(TAG_STORAGE_BENCHMARK, scrubPath(path)
+                            + " " + ident + " " + create + " " + run + " " + destroy);
 
                     synchronized (mLock) {
                         final VolumeRecord rec = findRecordForPath(path);
@@ -2536,9 +2533,7 @@ class StorageManagerService extends IStorageManager.Stub
                         final long time = extras.getLong("time");
 
                         final DropBoxManager dropBox = mContext.getSystemService(DropBoxManager.class);
-                        if (dropBox != null) {
-                            dropBox.addText(TAG_STORAGE_TRIM, scrubPath(path) + " " + bytes + " " + time);
-                        }
+                        dropBox.addText(TAG_STORAGE_TRIM, scrubPath(path) + " " + bytes + " " + time);
 
                         synchronized (mLock) {
                             final VolumeRecord rec = findRecordForPath(path);
@@ -2987,16 +2982,32 @@ class StorageManagerService extends IStorageManager.Stub
             throw new IllegalArgumentException("password cannot be empty");
         }
 
-        if (DEBUG_EVENTS) {
-            Slog.i(TAG, "changing encryption password...");
-        }
+        synchronized (mLock) {
+            if (DEBUG_EVENTS) {
+                Slog.i(TAG, "changing encryption password...");
+            }
 
-        try {
-            mVold.fdeChangePassword(type, password);
-            return 0;
-        } catch (Exception e) {
-            Slog.wtf(TAG, e);
-            return -1;
+            ILockSettings lockSettings = ILockSettings.Stub.asInterface(
+                            ServiceManager.getService("lock_settings"));
+            String currentPassword="default_password";
+            try {
+                currentPassword = lockSettings.getPassword();
+            } catch (Exception e) {
+                Slog.wtf(TAG, "Couldn't get password" + e);
+            }
+
+            try {
+                mVold.fdeChangePassword(type, currentPassword, password);
+                try {
+                    lockSettings.sanitizePassword();
+                } catch (Exception e) {
+                    Slog.wtf(TAG, "Couldn't sanitize password" + e);
+                }
+                return 0;
+            } catch (Exception e) {
+                Slog.wtf(TAG, e);
+                return -1;
+            }
         }
     }
 

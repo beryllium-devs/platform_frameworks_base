@@ -36,7 +36,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.SearchManager;
 import android.app.WallpaperManager;
-import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -2804,10 +2803,6 @@ public final class Settings {
         public boolean putStringForUser(ContentResolver cr, String name, String value,
                 String tag, boolean makeDefault, final int userHandle,
                 boolean overrideableByRestore) {
-            if (GmsCompat.isEnabled()) {
-                return true;
-            }
-
             try {
                 Bundle arg = new Bundle();
                 arg.putString(Settings.NameValueTable.VALUE, value);
@@ -3462,6 +3457,7 @@ public final class Settings {
         @UnsupportedAppUsage
         public static String getStringForUser(ContentResolver resolver, String name,
                 int userHandle) {
+            android.util.SeempLog.record(android.util.SeempLog.getSeempGetApiIdFromValue(name));
             if (MOVED_TO_SECURE.contains(name)) {
                 Log.w(TAG, "Setting " + name + " has moved from android.provider.Settings.System"
                         + " to android.provider.Settings.Secure, returning read-only value.");
@@ -3517,6 +3513,7 @@ public final class Settings {
 
         private static boolean putStringForUser(ContentResolver resolver, String name, String value,
                 int userHandle, boolean overrideableByRestore) {
+            android.util.SeempLog.record(android.util.SeempLog.getSeempPutApiIdFromValue(name));
             if (MOVED_TO_SECURE.contains(name)) {
                 Log.w(TAG, "Setting " + name + " has moved from android.provider.Settings.System"
                         + " to android.provider.Settings.Secure, value is unchanged.");
@@ -4246,6 +4243,13 @@ public final class Settings {
          */
         public static final String DISPLAY_COLOR_MODE_VENDOR_HINT =
                 "display_color_mode_vendor_hint";
+
+        /**
+         * Whether to play tone while outgoing call is accepted.
+         * The value 1 - vibrate, 0 - not
+         * @hide
+         */
+        public static final String CALL_CONNECTED_TONE_ENABLED = "call_connected_tone_enabled";
 
         /**
          * The user selected min refresh rate in frames per second.
@@ -5158,24 +5162,6 @@ public final class Settings {
         public static final String MULTI_AUDIO_FOCUS_ENABLED = "multi_audio_focus_enabled";
 
         /**
-         * Whether the phone ringtone should be played in an increasing manner
-         * @hide
-         */
-        public static final String INCREASING_RING = "increasing_ring";
-
-        /**
-         * Start volume fraction for increasing ring volume
-         * @hide
-         */
-        public static final String INCREASING_RING_START_VOLUME = "increasing_ring_start_vol";
-
-        /**
-         * Ramp up time (seconds) for increasing ring
-         * @hide
-         */
-        public static final String INCREASING_RING_RAMP_UP_TIME = "increasing_ring_ramp_up_time";
-
-        /**
          * IMPORTANT: If you add a new public settings you also have to add it to
          * PUBLIC_SETTINGS below. If the new setting is hidden you have to add
          * it to PRIVATE_SETTINGS below. Also add a validator that can validate
@@ -5302,6 +5288,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(SHOW_BATTERY_PERCENT);
             PRIVATE_SETTINGS.add(DISPLAY_COLOR_MODE);
             PRIVATE_SETTINGS.add(DISPLAY_COLOR_MODE_VENDOR_HINT);
+            PRIVATE_SETTINGS.add(CALL_CONNECTED_TONE_ENABLED);
         }
 
         /**
@@ -5707,6 +5694,7 @@ public final class Settings {
             MOVED_TO_GLOBAL.add(Settings.Global.NITZ_UPDATE_SPACING);
             MOVED_TO_GLOBAL.add(Settings.Global.NTP_SERVER);
             MOVED_TO_GLOBAL.add(Settings.Global.NTP_TIMEOUT);
+            MOVED_TO_GLOBAL.add(Settings.Global.NTP_SERVER_2);
             MOVED_TO_GLOBAL.add(Settings.Global.PDP_WATCHDOG_ERROR_POLL_COUNT);
             MOVED_TO_GLOBAL.add(Settings.Global.PDP_WATCHDOG_LONG_POLL_INTERVAL_MS);
             MOVED_TO_GLOBAL.add(Settings.Global.PDP_WATCHDOG_MAX_PDP_RESET_FAIL_COUNT);
@@ -9414,24 +9402,6 @@ public final class Settings {
                 "night_display_last_activated_time";
 
         /**
-         * Display color balance for the red channel, from 0 to 255.
-         * @hide
-         */
-        public static final String DISPLAY_COLOR_BALANCE_RED = "display_color_balance_red";
-
-        /**
-         * Display color balance for the green channel, from 0 to 255.
-         * @hide
-         */
-        public static final String DISPLAY_COLOR_BALANCE_GREEN = "display_color_balance_green";
-
-        /**
-         * Display color balance for the blue channel, from 0 to 255.
-         * @hide
-         */
-        public static final String DISPLAY_COLOR_BALANCE_BLUE = "display_color_balance_blue";
-
-        /**
          * Control whether display white balance is currently enabled.
          * @hide
          */
@@ -11123,6 +11093,15 @@ public final class Settings {
         public static final String MOBILE_DATA_ALWAYS_ON = "mobile_data_always_on";
 
         /**
+        * Whether to allow modem to intelligently switch DDS without user direction
+        *
+        * (0 = disabled, 1 = enabled)
+        * @hide
+        */
+        @Readable
+        public static final String SMART_DDS_SWITCH = "smart_dds_switch";
+
+        /**
          * Whether the wifi data connection should remain active even when higher
          * priority networks like Ethernet are active, to keep both networks.
          * In the case where higher priority networks are connected, wifi will be
@@ -11275,12 +11254,15 @@ public final class Settings {
         @Readable
         public static final String NITZ_UPDATE_SPACING = "nitz_update_spacing";
 
-        /** Preferred NTP server. {@hide} */
-        @Readable
-        public static final String NTP_SERVER = "ntp_server";
-        /** Timeout in milliseconds to wait for NTP server. {@hide} */
-        @Readable
-        public static final String NTP_TIMEOUT = "ntp_timeout";
+       /** Preferred NTP server. {@hide} */
+       @Readable
+       public static final String NTP_SERVER = "ntp_server";
+       /** Timeout in milliseconds to wait for NTP server. {@hide} */
+       @Readable
+       public static final String NTP_TIMEOUT = "ntp_timeout";
+       /** Secondary NTP server. {@hide} */
+       @Readable
+       public static final String NTP_SERVER_2 = "ntp_server_2";
 
         /** {@hide} */
         @Readable
@@ -15582,6 +15564,14 @@ public final class Settings {
          */
         @Readable
         public static final String CELL_ON = "cell_on";
+
+        /**
+         * Whether to vibrate while outgoing call is accepted
+         * The value 1 - vibrate, 0 - not
+         * @hide
+         */
+        public static final String VIBRATING_FOR_OUTGOING_CALL_ACCEPTED =
+                "vibrating_for_outgoing_call_accepted";
 
         /**
          * Global settings which can be accessed by instant apps.

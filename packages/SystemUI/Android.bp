@@ -95,12 +95,17 @@ android_library {
         "dagger2",
         "jsr330",
         "lottie",
-        "vendor.lineage.biometrics.fingerprint.inscreen-V1.0-java",
-        "tensorflowlite_java",
-        "colorkt",
-        "themelib",
     ],
     manifest: "AndroidManifest.xml",
+    defaults: [
+       "framework-wifi-vendor-hide-access-defaults",
+    ],
+    libs: [
+        "android.car",
+        "android.car.userlib",
+        "ims-common",
+        "extphonelib",
+    ],
 
     kotlincflags: ["-Xjvm-default=enable"],
 
@@ -134,6 +139,9 @@ android_library {
     manifest: "tests/AndroidManifest-base.xml",
     additional_manifests: ["tests/AndroidManifest.xml"],
 
+    defaults: [
+       "framework-wifi-vendor-hide-access-defaults",
+    ],
     resource_dirs: [
         "tests/res",
         "res-product",
@@ -186,11 +194,12 @@ android_library {
         "dagger2",
         "jsr330",
         "WindowManager-Shell",
-        "vendor.lineage.biometrics.fingerprint.inscreen-V1.0-java",
     ],
     libs: [
         "android.test.runner",
         "android.test.base",
+        "ims-common",
+        "extphonelib",
     ],
     kotlincflags: ["-Xjvm-default=enable"],
     aaptflags: [
@@ -206,8 +215,6 @@ android_app {
     static_libs: [
         "SystemUI-core",
     ],
-    jni_libs: ["libtensorflowlite_jni"],
-    use_embedded_native_libs: true,
     resource_dirs: [],
 
     platform_apis: true,
@@ -218,6 +225,14 @@ android_app {
     optimize: {
         proguard_flags_files: ["proguard.flags"],
     },
+
+    libs: [
+        "android.car",
+        "android.car.userlib",
+        "ims-common",
+        "extphonelib",
+    ],
+    enforce_uses_libs: false,
 
     kotlincflags: ["-Xjvm-default=enable"],
 
